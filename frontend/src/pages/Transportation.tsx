@@ -286,11 +286,6 @@ const Transportation = () => {
           </h1>
           <p className="text-xl text-muted-foreground">Reliable transportation across Rwanda</p>
         </div>
-
-        <div className="text-center mb-8 mt-8">
-          <h2 className="text-2xl font-bold mb-2">Choose Your Vehicle</h2>
-          <p className="text-muted-foreground">Select the perfect vehicle for your transportation</p>
-        </div>
       </div>
 
       {/* Error Display */}
@@ -341,23 +336,6 @@ const Transportation = () => {
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Up to {service.capacity}</span>
                 </div>
-              </div>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex gap-2 text-sm">
-                  <span className="font-semibold">Per Trip:</span>
-                  <span className="font-medium">
-                    {(service.pricePerTrip || 0).toLocaleString()} {service.currency}
-                  </span>
-                </div>
-                {service.pricePerHour && (
-                  <div className="flex gap-2 text-sm">
-                    <span className="font-semibold">Per Hour:</span>
-                    <span className="font-medium">
-                      {service.pricePerHour.toLocaleString()} {service.currency}
-                    </span>
-                  </div>
-                )}
               </div>
 
               <div className="flex justify-between items-center">

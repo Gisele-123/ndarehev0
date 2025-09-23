@@ -244,13 +244,8 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
             <p className="text-xl text-muted-foreground">Reliable transportation from Kigali International Airport</p>
           </div>
         </div>
-
         {/* Vehicle Selection */}
         <div className="w-full max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">Choose Your Vehicle</h2>
-            <p className="text-muted-foreground">Select the perfect vehicle for your airport transfer</p>
-          </div>
 
           {transportationLoading ? (
             <div className="text-center py-8">
