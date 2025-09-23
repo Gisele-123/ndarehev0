@@ -8,8 +8,8 @@ import axios from 'axios';
 // const API_BASE_URL = 'http://localhost:5000/api';
 // const LOCAL_PAYMENT_API_URL = 'http://localhost:5000/api'; 
 
-const VITE_API_URL='http://86.38.218.30/api';
-const LOCAL_PAYMENT_API_URL='http://86.38.218.30/api';
+const API_BASE_URL = 'http://86.38.218.30/api';
+const LOCAL_PAYMENT_API_URL = 'http://86.38.218.30/api';
 
 interface ApiResponse<T> {
   success: boolean;
