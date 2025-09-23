@@ -221,8 +221,8 @@ const MyBookings = ({ showLayout = true }: { showLayout?: boolean }) => {
         {bookings.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg mb-4">You haven't made any bookings yet.</p>
-            <Button asChild>
-              <Link to="/accommodations">Start Booking</Link>
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+              <Link to="/dashboard/accommodations">Start Your First Booking</Link>
             </Button>
           </div>
         )}
