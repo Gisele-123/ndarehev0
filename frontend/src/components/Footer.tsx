@@ -22,7 +22,7 @@ const Footer = () => {
               </span> */}
             </div>
             <p className="text-sm text-muted-foreground">
-              Where to stay in Rwanda 🇷🇼
+              Where to stay in Rwanda 
             </p>
             <p className="text-sm text-muted-foreground">
               Your gateway to authentic Rwandan accommodation and local experiences.
@@ -89,7 +89,7 @@ const Footer = () => {
             <div className="space-y-3 text-sm text-muted-foreground">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <span>dianekund@gmail.com</span>
+                <span>info@ndarehe.com</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4" />
