@@ -11,11 +11,11 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Create payment intent
 export const createPaymentIntent = async (
   amount: number,
-  currency: string = 'rwf',
+  currency: string = 'usd',
   metadata: any = {}
 ): Promise<Stripe.PaymentIntent> => {
   return await stripe.paymentIntents.create({
-    amount: Math.round(amount * 100), // Convert to cents
+    amount: Math.round(amount),
     currency: currency.toLowerCase(),
     metadata,
     automatic_payment_methods: {
