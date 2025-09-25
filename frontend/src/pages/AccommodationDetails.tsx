@@ -316,6 +316,17 @@ const AccommodationDetails = () => {
       hasInclusiveBreakfast: true,
       hasKitchen: false,
       specialNotes: "Contact for specific room details and amenities."
+    },
+    "Bisabo Suites Apartment": {
+      roomTypes: [
+        { name: "Two-Bedroom Apartment", price: 220, description: "1 full bed , 1 sofa bed" },
+        { name: "One-Bedroom Apartment", price: 180, description: "1 full bed , 1 sofa bed" },
+        { name: "Studio", price: 150, description: "1 full bed , 1 sofa bed" },
+      ], // Add room types if available
+      hasFreeAirportPickup: false,
+      hasInclusiveBreakfast: true,
+      hasKitchen: false,
+      specialNotes: "Contact for specific room details and amenities."
     }
   };
 

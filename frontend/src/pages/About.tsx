@@ -241,9 +241,9 @@ const stopAutoSlide = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative py-24 bg-gradient-to-br from-green-600/90 to-green-800/90 text-white">
+      <section className="relative py-24 bg-gradient-to-br from-green-600/40 to-green-800/40 text-white">
         <div className="absolute inset-0 bg-[url('/src/rwanda_main.jpg')] bg-cover bg-center opacity-20"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-green-600/80 to-green-800/80"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-green-600/40 to-green-800/40"></div>
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse"></div>
           <div className="absolute top-40 right-20 w-16 h-16 bg-white/20 rounded-full animate-ping"></div>
@@ -255,7 +255,7 @@ const stopAutoSlide = () => {
             <p className="text-xl md:text-2xl mb-8 opacity-90 animate-fade-in-delay">
               Connecting travelers with authentic Rwandan experiences since 2024
             </p>
-            <Badge className="text-lg px-4 py-2 bg-white text-green-700 animate-fade-in-delay-2 hover:shadow-lg hover:scale-105 hover:-translate-y-1 hover:bg-white transition-all duration-300 cursor-pointer">Where to stay in Rwanda 🇷🇼</Badge>
+            <Badge className="text-lg px-4 py-2 bg-white text-green-700 animate-fade-in-delay-2 hover:shadow-lg hover:scale-105 hover:-translate-y-1 hover:bg-white transition-all duration-300 cursor-pointer">Where to stay in Rwanda</Badge>
           </div>
         </div>
       </section>

@@ -40,7 +40,7 @@ const Contact = () => {
     {
       icon: Mail,
       title: "Email",
-      value: "dianekund@gmail.com",
+      value: "info@ndarehe.com",
       description: "Send us an email anytime"
     },
     {
@@ -58,8 +58,8 @@ const Contact = () => {
     {
       icon: Clock,
       title: "Business Hours",
-      value: "Mon-Fri: 8AM-6PM",
-      description: "Saturday: 9AM-4PM, Sunday: Closed"
+      value: "Mon-Sun: 8AM-6PM",
+      description: "We work all week days"
     }
   ];
 
@@ -297,16 +297,16 @@ const Contact = () => {
               <CardContent>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Monday - Friday</span>
+                    <span>Monday - Sunday</span>
                     <span className="font-medium">8:00 AM - 6:00 PM</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Saturday</span>
-                    <span className="font-medium">9:00 AM - 4:00 PM</span>
+                    <span className="font-medium">Online</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Sunday</span>
-                    <span className="font-medium">Closed</span>
+                    <span className="font-medium">Online</span>
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-muted/50 rounded-lg">
