@@ -332,7 +332,7 @@ const AccommodationDetails = () => {
 
   // In your AccommodationDetails component
   const handleStripePayment = async () => {
-    console.log('🔵 handleFlutterwavePayment called!');
+    console.log('🔵 handleStripePayment called!');
     console.log('🔵 accommodation:', accommodation);
     console.log('🔵 booking:', booking);
     console.log('🔵 paymentProvider:', paymentProvider);
@@ -937,9 +937,7 @@ const AccommodationDetails = () => {
                 <p className="text-xs text-muted-foreground mt-2">
                   Unit price: {accommodation.currency} {accommodation.pricePerNight.toLocaleString()} per person per night
                 </p>
-                <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                  💳 You'll be redirected to Flutterwave's secure payment page to complete your transaction.
-                </p>
+                
               </div>
 
               {/* Total Calculation */}
