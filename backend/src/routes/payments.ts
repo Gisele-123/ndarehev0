@@ -95,12 +95,12 @@ router.get("/flutterwave/verify", async (req, res) => {
       }
       const redirectUrl = process.env.NODE_ENV === "production"
         ? `${process.env.BASE_URL}/booking/success?bookingId=${bookingId}`
-        : `http://localhost:5173/booking/success?bookingId=${bookingId}`;
+        : `https://ndarehe.com/booking/success?bookingId=${bookingId}`;
       return res.redirect(redirectUrl);
     }
     const redirectUrl = process.env.NODE_ENV === "production"
       ? `${process.env.BASE_URL}/booking/failed`
-      : `http://localhost:5173/booking/failed`;
+      : `https://ndarehe.com/booking/failed`;
     return res.redirect(redirectUrl);
   } catch (error) {
     console.error("Flutterwave verify error:", error);
