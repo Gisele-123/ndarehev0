@@ -275,14 +275,14 @@ const Contact = () => {
                 </div>
                 
                 <Button asChild className="w-full" variant="outline">
-                  <a href="tel:+250788123456" className="flex items-center">
+                  <a href="tel:+250791753659" className="flex items-center">
                     <Phone className="h-4 w-4 mr-2" />
                     Call Now
                   </a>
                 </Button>
                 
                 <Button asChild className="w-full" variant="outline">
-                  <a href="https://wa.me/250788123456" className="flex items-center">
+                  <a href="https://wa.me/+250791753659" className="flex items-center">
                     <MessageCircle className="h-4 w-4 mr-2" />
                     WhatsApp
                   </a>
