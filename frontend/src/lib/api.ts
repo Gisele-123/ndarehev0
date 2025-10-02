@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // API utility for consistent backend calls
 
-const API_BASE_URL = 'http://localhost:5000/api';
-const LOCAL_PAYMENT_API_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://ndarehe.com/api';
+const LOCAL_PAYMENT_API_URL = 'https://ndarehe.com/api';
 
 interface ApiResponse<T> {
   success: boolean;

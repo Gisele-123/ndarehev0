@@ -954,8 +954,8 @@ const AccommodationDetails = () => {
                 const nights = hasDates ? Math.max(1, Math.ceil((new Date(booking.checkOut).getTime() - new Date(booking.checkIn).getTime()) / (1000 * 60 * 60 * 24))) : 0;
                 const guests = parseInt(booking.guests || "1", 10) || 1;
                 const baseTotal = nights * guests * (accommodation.pricePerNight || 0);
-                const stripeFee = baseTotal * 0.05;
-                const total = baseTotal + stripeFee;
+                const flutterwaveFee = baseTotal * 0.05;
+                const total = baseTotal + flutterwaveFee;
                 return (
                   <div className="bg-secondary/50 p-4 rounded-lg">
                     <div className="flex justify-between items-center">
@@ -970,7 +970,7 @@ const AccommodationDetails = () => {
                               <br />
                               Base: {accommodation.currency} {baseTotal.toLocaleString()}
                               <br />
-                              Stripe fee (5%): {accommodation.currency} {stripeFee.toLocaleString()}
+                              Flutterwave fee (5%): {accommodation.currency} {flutterwaveFee.toLocaleString()}
                             </>
                           )}
                         </p>
@@ -1009,7 +1009,7 @@ const AccommodationDetails = () => {
                         Processing...
                       </div>
                     ) : (
-                      `Pay with ${paymentProvider === 'MOMO' ? 'MTN/Airtel' : 'Card'} (Stripe)`
+                      `Pay with ${paymentProvider === 'MOMO' ? 'MTN/Airtel' : 'Card'} Flutterwavw`
                     )}
                   </Button>
                   

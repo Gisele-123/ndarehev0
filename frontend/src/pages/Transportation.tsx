@@ -53,8 +53,6 @@ const Transportation = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
-  // UI selection: VISA | MASTERCARD | MOMO. Maps to backend methods CARD or MOBILE_MONEY
-  // Payment method is now handled by Stripe checkout
   const [selectedService, setSelectedService] = useState<Transportation | null>(null);
   const [booking, setBooking] = useState({
     startDate: "",
@@ -488,7 +486,6 @@ const Transportation = () => {
                     <img src="/logos/visa.svg" alt="Visa" className="h-4" />
                     <img src="/logos/mastercard.svg" alt="Mastercard" className="h-4" />
                     <img src="/logos/momo.jpg" alt="MTN MoMo" className="h-4" />
-                    <span>Secure checkout via Stripe</span>
                   </div>
                 </div>
               </div>
@@ -516,7 +513,7 @@ const Transportation = () => {
                               <br />
                               Base: {selectedService.currency} {baseTotal.toLocaleString()}
                               <br />
-                              Stripe fee (5%): {selectedService.currency} {flutterwaveFee.toLocaleString()}
+                              Fluttewave fee (5%): {selectedService.currency} {flutterwaveFee.toLocaleString()}
                             </>
                           )}
                         </p>
@@ -541,7 +538,7 @@ const Transportation = () => {
                         Processing...
                       </div>
                     ) : (
-                      'Pay with Card (Stripe)'
+                      'Pay with Flutterwave'
                     )}
                   </Button>
                   {txRef && (

@@ -59,7 +59,6 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
   const [transportationLoading, setTransportationLoading] = useState(true);
   const [vehicles, setVehicles] = useState<Transportation[]>([]);
   const [isPaying, setIsPaying] = useState(false);
-  // Payment method is now handled by Stripe checkout
   const [showVerificationReminder, setShowVerificationReminder] = useState(false);
 
   // Added for payment flow
@@ -128,8 +127,6 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
     }
 
     try {
-      // For Stripe checkout, we don't need to validate card fields here
-      // User will enter card details on Stripe's secure checkout page
 
       const response = await bookingsApi.create({
         serviceType: "TRANSPORTATION",
@@ -142,8 +139,8 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
 
       if (response.success) {
         const baseAmount = selectedCar.pricePerTrip;
-        const stripeFee = baseAmount * 0.05; // 5% Stripe fee
-        const amount = baseAmount + stripeFee;
+        const fluttwaveFee = baseAmount * 0.05; 
+        const amount = baseAmount + fluttwaveFee;
 
         setIsPaying(true);
 
@@ -437,7 +434,6 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
                       <img src="/logos/visa.svg" alt="Visa" className="h-4" />
                       <img src="/logos/mastercard.svg" alt="Mastercard" className="h-4" />
                       <img src="/logos/momo.jpg" alt="MTN MoMo" className="h-4" />
-                      <span>Secure checkout via Stripe</span>
                     </div>
                   </div>
                 </div>
@@ -449,7 +445,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
                       <p className="text-sm text-muted-foreground">
                         Base: {selectedCar.currency} {selectedCar.pricePerTrip.toLocaleString()}
                         <br />
-                        Stripe fee (5%): {selectedCar.currency} {(selectedCar.pricePerTrip * 0.05).toLocaleString()}
+                        Flutterwave fee (5%): {selectedCar.currency} {(selectedCar.pricePerTrip * 0.05).toLocaleString()}
                         <br />
                         Includes all taxes and fees
                       </p>
@@ -474,7 +470,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
                           Processing...
                         </div>
                       ) : (
-                        'Pay with Card (Stripe)'
+                        'Pay with Flutterwave'
                       )}
                     </Button>
                     {txRef && (
