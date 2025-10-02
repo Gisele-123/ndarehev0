@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { authApi } from "@/lib/api";
 
 interface User {
+  phone: any;
   id: string;
   email: string;
   firstName: string;

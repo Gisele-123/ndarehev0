@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import EmailVerificationReminder from "@/components/EmailVerificationReminder";
-import { transportationApi, bookingsApi, stripeApi } from "@/lib/api";
+import { transportationApi, bookingsApi, flutterwaveApi } from "@/lib/api";
 
 interface Transportation {
   id: string;
@@ -152,7 +152,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
           name: `${user?.firstName || 'Guest'} ${user?.lastName || ''}`.trim(),
         } as { email: string; name: string };
 
-        const initRes = await stripeApi.init({
+        const initRes = await flutterwaveApi.init({
           bookingId: (response as any).data.booking.id,
           amount,
           currency: selectedCar.currency || 'RWF',
@@ -192,7 +192,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
     }
     try {
       setIsPaying(true);
-      const data = await stripeApi.verifyJson(txRef);
+      const data = await flutterwaveApi.verifyJson(txRef);
       if (data.success && data.paid) {
         setPaymentVerified(true);
         toast({ title: 'Payment Verified', description: 'Your payment has been confirmed. You can now proceed.', variant: 'default' });

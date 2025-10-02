@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import EmailVerificationReminder from "@/components/EmailVerificationReminder";
-import { transportationApi, bookingsApi, paymentsApi, stripeApi } from "@/lib/api";
+import { transportationApi, bookingsApi, flutterwaveApi } from "@/lib/api";
 
 interface Transportation {
   id: string;
@@ -157,8 +157,8 @@ const Transportation = () => {
     }
 
     try {
-      // For Stripe checkout, we don't need to validate card fields here
-      // User will enter card details on Stripe's secure checkout page
+      // For Flutterwave checkout, we don't need to validate card fields here
+      // User will enter card details on Flutterwave's secure checkout page
 
       const response = await bookingsApi.create({
         serviceType: "TRANSPORTATION",
@@ -176,8 +176,8 @@ const Transportation = () => {
         const rawNights = Math.ceil((end.getTime() - start.getTime()) / msPerDay);
         const days = Math.max(1, rawNights);
         const baseAmount = days * (selectedService.pricePerTrip || 0);
-        const stripeFee = baseAmount * 0.05; // 5% Stripe fee
-        const amount = baseAmount + stripeFee;
+        const flutterwaveFee = baseAmount * 0.05; // 5% fee
+        const amount = baseAmount + flutterwaveFee;
 
         setIsPaying(true);
 
@@ -185,14 +185,16 @@ const Transportation = () => {
         const customer = {
           email: user?.email || 'guest@example.com',
           name: `${user?.firstName || 'Guest'} ${user?.lastName || ''}`.trim(),
-        } as { email: string; name: string };
+          phonenumber: user?.phone || undefined,
+        } as { email: string; name: string; phonenumber?: string };
 
-        // Initialize Stripe Hosted Pay via backend
-        const initRes = await stripeApi.init({
+        // Initialize Flutterwave Hosted Pay via backend
+        const initRes = await flutterwaveApi.init({
           bookingId: (response as any).data.booking.id,
           amount,
           currency: selectedService.currency || 'RWF',
           customer,
+          payment_type: 'card', // Always use card for hosted pay
         });
 
         if (initRes.success && initRes.link) {
@@ -230,7 +232,7 @@ const Transportation = () => {
     }
     try {
       setIsPaying(true);
-      const data = await stripeApi.verifyJson(txRef);
+      const data = await flutterwaveApi.verifyJson(txRef);
       if (data.success && data.paid) {
         setPaymentVerified(true);
         toast({ title: 'Payment Verified', description: 'Your payment has been confirmed. You can now proceed.', variant: 'default' });
@@ -498,8 +500,8 @@ const Transportation = () => {
                 const raw = hasDates ? Math.ceil((new Date(booking.endDate).getTime() - new Date(booking.startDate).getTime()) / msPerDay) : 0;
                 const days = hasDates ? Math.max(1, raw) : 0;
                 const baseTotal = days > 0 ? days * (selectedService.pricePerTrip || 0) : 0;
-                const stripeFee = baseTotal * 0.05;
-                const total = baseTotal + stripeFee;
+                const flutterwaveFee = baseTotal * 0.05;
+                const total = baseTotal + flutterwaveFee;
                 return (
                   <div className="bg-secondary/50 p-4 rounded-lg">
                     <div className="flex justify-between items-center">
@@ -514,7 +516,7 @@ const Transportation = () => {
                               <br />
                               Base: {selectedService.currency} {baseTotal.toLocaleString()}
                               <br />
-                              Stripe fee (5%): {selectedService.currency} {stripeFee.toLocaleString()}
+                              Stripe fee (5%): {selectedService.currency} {flutterwaveFee.toLocaleString()}
                             </>
                           )}
                         </p>
