@@ -22,7 +22,9 @@ router.post("/flutterwave", async (req, res) => {
       return res.status(404).json({ success: false, message: "Booking or user not found" });
     }
 
-    const baseUrl = process.env.BACKEND_URL || "http://ndarehe.com/api";
+    // Normalize backend base URL for redirect callback (should be host only)
+    const rawBaseUrl = process.env.BACKEND_URL || "http://localhost:5000";
+    const baseUrl = rawBaseUrl.replace(/\/$/, "");
     const redirect_url = `${baseUrl}/api/payments/flutterwave/verify`;
 
     const payload = {
@@ -69,7 +71,11 @@ const link = fwRes?.data?.link;
     return res.json({ success: true, link, tx_ref });
   } catch (error) {
     console.error("Flutterwave create session error:", error);
-    return res.status(500).json({ success: false, message: "Payment initialization failed", error: error instanceof Error ? error.message : "Unknown error" });
+    // Surface more details when available
+    const anyErr = error as any;
+    const axiosData = anyErr?.response?.data;
+    const message = (axiosData && (axiosData.message || axiosData.status || axiosData.error)) || (error instanceof Error ? error.message : "Unknown error");
+    return res.status(500).json({ success: false, message: "Payment initialization failed", error: message, details: axiosData || undefined });
   }
 });
 
@@ -127,7 +133,8 @@ router.get("/flutterwave/verify-json", async (req, res) => {
     if (!payment) {
       return res.json({ success: true, paid: false, message: "No payment yet" });
     }
-    const fwRes = await verifyPayment(String(tx_ref));
+    // Use v4 verify-by-reference for tx_ref values
+    const fwRes = await verifyPaymentByReference(String(tx_ref));
     const paymentStatus = fwRes?.data?.status;
     const bookingId = fwRes?.data?.meta?.bookingId || null;
     if (paymentStatus === "successful" && bookingId) {

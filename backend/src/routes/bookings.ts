@@ -234,30 +234,66 @@ router.post('/', protect, requireVerification, validate(bookingSchemas.create), 
     }
 
     // Check availability for accommodation
-    if (serviceType === 'ACCOMMODATION' && startDate && endDate) {
-      const conflictingBookings = await prisma.booking.findFirst({
-        where: {
-          accommodationId: serviceId,
-          serviceType: 'ACCOMMODATION',
-          status: {
-            in: ['PENDING', 'CONFIRMED']
-          },
-          OR: [
-            {
-              startDate: { lte: new Date(endDate) },
-              endDate: { gte: new Date(startDate) }
-            }
-          ]
-        }
-      });
+// Check availability for accommodation
+if (serviceType === 'ACCOMMODATION' && startDate && endDate) {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  console.log(`[Booking] Checking availability for ${serviceId} from ${start} to ${end}`);
 
-      if (conflictingBookings) {
-        return res.status(400).json({
-          success: false,
-          error: 'Accommodation not available for selected dates'
-        });
+  const conflictingBookings = await prisma.booking.findFirst({
+    where: {
+      accommodationId: serviceId,
+      serviceType: 'ACCOMMODATION',
+      status: {
+        in: ['CONFIRMED'] // Only check CONFIRMED bookings, not PENDING
+      },
+      OR: [
+        // Booking starts during existing booking
+        {
+          startDate: { lte: start },
+          endDate: { gt: start }
+        },
+        // Booking ends during existing booking  
+        {
+          startDate: { lt: end },
+          endDate: { gte: end }
+        },
+        // Booking completely overlaps existing booking
+        {
+          startDate: { gte: start },
+          endDate: { lte: end }
+        }
+      ]
+    },
+    include: {
+      user: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true
+        }
       }
     }
+  });
+
+  if (conflictingBookings) {
+    console.log(`[Booking] Conflict found:`, {
+      conflictingBookingId: conflictingBookings.id,
+      conflictingDates: `${conflictingBookings.startDate} to ${conflictingBookings.endDate}`,
+      status: conflictingBookings.status,
+      user: conflictingBookings.user
+    });
+    
+    return res.status(400).json({
+      success: false,
+      error: 'Accommodation not available for selected dates',
+      details: `Already booked from ${conflictingBookings.startDate.toISOString().split('T')[0]} to ${conflictingBookings.endDate?.toISOString().split('T')[0]}`
+    });
+  }
+  
+  console.log(`[Booking] No conflicts found - accommodation is available`);
+}
 
     // Create booking
     const booking = await prisma.booking.create({
