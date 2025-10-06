@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { initializePayment, verifyPayment } from "@/utils/flutterwave";
+import { initializePayment, verifyPayment , verifyPaymentByReference} from "@/utils/flutterwave";
 // import { createCheckoutSession, retrieveSession } from "@/utils/stripe";
 import { prisma } from "../config/database";
 import { sendEmail, emailTemplates } from "../utils/email";
@@ -22,21 +22,29 @@ router.post("/flutterwave", async (req, res) => {
       return res.status(404).json({ success: false, message: "Booking or user not found" });
     }
 
-    const baseUrl = process.env.BACKEND_URL || "http://localhost:5000";
+    const baseUrl = process.env.BACKEND_URL || "http://ndarehe.com/api";
     const redirect_url = `${baseUrl}/api/payments/flutterwave/verify`;
 
     const payload = {
-      tx_ref,
-      amount,
-      currency,
-      payment_type: payment_type || "card",
-      redirect_url,
-      customer: { email: customer.email, name: customer.name, phonenumber: customer.phonenumber },
-      meta: { bookingId },
-    };
+  tx_ref,
+  amount,
+  currency,
+  payment_options: payment_type === "mobilemoney" ? "mobilemoneyrwanda" : "card", 
+  redirect_url,
+  customer: { 
+    email: customer.email, 
+    name: customer.name, 
+    phonenumber: customer.phonenumber 
+  },
+  meta: { bookingId },
+  customizations: {
+    title: 'Ndarehe Booking',
+    description: 'Secure Payment'
+  }
+};
 
-    const fwRes = await initializePayment(payload);
-    const link = fwRes?.data?.link || fwRes?.link;
+const fwRes = await initializePayment(payload);
+const link = fwRes?.data?.link;
 
     // Create payment record as PENDING (store fwRes id in gatewayResponse)
     await prisma.payment.create({
@@ -72,7 +80,7 @@ router.get("/flutterwave/verify", async (req, res) => {
     return res.status(400).send("tx_ref is required");
   }
   try {
-    const fwRes = await verifyPayment(String(tx_ref));
+    const fwRes = await verifyPaymentByReference(String(tx_ref)); 
     const paymentStatus = fwRes?.data?.status;
     const bookingId = fwRes?.data?.meta?.bookingId;
     if (paymentStatus === "successful" && bookingId) {

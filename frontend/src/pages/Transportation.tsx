@@ -134,94 +134,92 @@ const Transportation = () => {
     setModalOpen(true);
   };
 
-  const handleBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedService) return;
+const handleBooking = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!selectedService) return;
 
-    // Basic date validation
-    if (!booking.startDate || !booking.endDate) {
-      toast({ title: 'Dates required', description: 'Please select start and end dates.', variant: 'destructive' });
-      return;
-    }
-    if (new Date(booking.endDate) <= new Date(booking.startDate)) {
-      toast({ title: 'Invalid Dates', description: 'End date must be after start date.', variant: 'destructive' });
-      return;
-    }
+  // Basic date validation
+  if (!booking.startDate || !booking.endDate) {
+    toast({ title: 'Dates required', description: 'Please select start and end dates.', variant: 'destructive' });
+    return;
+  }
+  if (new Date(booking.endDate) <= new Date(booking.startDate)) {
+    toast({ title: 'Invalid Dates', description: 'End date must be after start date.', variant: 'destructive' });
+    return;
+  }
 
-    // Check if user is verified
-    if (user && !user.isVerified) {
-      setShowVerificationReminder(true);
-      return;
-    }
+  // Check if user is verified
+  if (user && !user.isVerified) {
+    setShowVerificationReminder(true);
+    return;
+  }
 
-    try {
-      // For Flutterwave checkout, we don't need to validate card fields here
-      // User will enter card details on Flutterwave's secure checkout page
+  try {
+    const response = await bookingsApi.create({
+      serviceType: "TRANSPORTATION",
+      serviceId: selectedService.id,
+      startDate: booking.startDate,
+      endDate: booking.endDate,
+      numberOfPeople: parseInt(booking.passengers),
+      specialRequests: `Pickup: ${booking.pickupLocation}, Dropoff: ${booking.dropoffLocation}, Service Type: ${booking.serviceType}`
+    });
 
-      const response = await bookingsApi.create({
-        serviceType: "TRANSPORTATION",
-        serviceId: selectedService.id,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
-        numberOfPeople: parseInt(booking.passengers),
-        specialRequests: `Pickup: ${booking.pickupLocation}, Dropoff: ${booking.dropoffLocation}, Service Type: ${booking.serviceType}`
+    if (response.success) {
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const start = new Date(booking.startDate);
+      const end = new Date(booking.endDate);
+      const rawNights = Math.ceil((end.getTime() - start.getTime()) / msPerDay);
+      const days = Math.max(1, rawNights);
+      const baseAmount = days * (selectedService.pricePerTrip || 0);
+      const flutterwaveFee = baseAmount * 0.05; // 5% fee
+      const amount = baseAmount + flutterwaveFee;
+
+      setIsPaying(true);
+
+      // Prepare customer for hosted pay
+      const customer = {
+        email: user?.email || 'guest@example.com',
+        name: `${user?.firstName || 'Guest'} ${user?.lastName || ''}`.trim(),
+        phonenumber: user?.phone || undefined,
+      } as { email: string; name: string; phonenumber?: string };
+
+      // Initialize Flutterwave Hosted Pay via backend
+      const initRes = await flutterwaveApi.init({
+        bookingId: (response as any).data.booking.id,
+        amount,
+        currency: selectedService.currency || 'RWF',
+        customer,
+        payment_type: 'card', // Always use card for hosted pay
       });
 
-      if (response.success) {
-        const msPerDay = 1000 * 60 * 60 * 24;
-        const start = new Date(booking.startDate);
-        const end = new Date(booking.endDate);
-        const rawNights = Math.ceil((end.getTime() - start.getTime()) / msPerDay);
-        const days = Math.max(1, rawNights);
-        const baseAmount = days * (selectedService.pricePerTrip || 0);
-        const flutterwaveFee = baseAmount * 0.05; // 5% fee
-        const amount = baseAmount + flutterwaveFee;
-
-        setIsPaying(true);
-
-        // Prepare customer for hosted pay
-        const customer = {
-          email: user?.email || 'guest@example.com',
-          name: `${user?.firstName || 'Guest'} ${user?.lastName || ''}`.trim(),
-          phonenumber: user?.phone || undefined,
-        } as { email: string; name: string; phonenumber?: string };
-
-        // Initialize Flutterwave Hosted Pay via backend
-        const initRes = await flutterwaveApi.init({
-          bookingId: (response as any).data.booking.id,
-          amount,
-          currency: selectedService.currency || 'RWF',
-          customer,
-          payment_type: 'card', // Always use card for hosted pay
-        });
-
-        if (initRes.success && initRes.link) {
-          setPaymentLink(initRes.link);
-          if (initRes.tx_ref) setTxRef(initRes.tx_ref);
-          // Redirect same tab
-          window.location.href = initRes.link;
-        } else {
-          throw new Error(initRes.message || 'Failed to initiate payment');
-        }
+      // FIXED: Use the correct response structure
+      if (initRes.success && initRes.link) {
+        setPaymentLink(initRes.link);
+        if (initRes.tx_ref) setTxRef(initRes.tx_ref);
+        // Redirect same tab
+        window.location.href = initRes.link;
       } else {
-        throw new Error("Booking failed");
+        throw new Error(initRes.message || 'Failed to initiate payment');
       }
-    } catch (error: any) {
-      console.error("Booking error:", error);
-
-      if (error.message && error.message.includes("verify your email")) {
-        setShowVerificationReminder(true);
-      } else {
-        toast({
-          title: "Booking Failed",
-          description: error.message || "There was an error processing your booking. Please try again.",
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setIsPaying(false);
+    } else {
+      throw new Error("Booking failed");
     }
-  };
+  } catch (error: any) {
+    console.error("Booking error:", error);
+
+    if (error.message && error.message.includes("verify your email")) {
+      setShowVerificationReminder(true);
+    } else {
+      toast({
+        title: "Booking Failed",
+        description: error.message || "There was an error processing your booking. Please try again.",
+        variant: "destructive"
+      });
+    }
+  } finally {
+    setIsPaying(false);
+  }
+};
 
   const verifyPayment = async () => {
     if (!txRef) {

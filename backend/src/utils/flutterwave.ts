@@ -1,48 +1,55 @@
-import Flutterwave from "flutterwave-node-v3";
 import axios from "axios";
 
 // Validate environment variables
 const FLW_PUBLIC_KEY = process.env.FLW_PUBLIC_KEY;
 const FLW_SECRET_KEY = process.env.FLW_SECRET_KEY;
+const FLW_ENCRYPTION_KEY = process.env.FLW_ENCRYPTION_KEY;
 
-if (!FLW_PUBLIC_KEY || !FLW_SECRET_KEY) {
+if (!FLW_PUBLIC_KEY || !FLW_SECRET_KEY || !FLW_ENCRYPTION_KEY) {
   console.error('[Flutterwave] ❌ Missing environment variables:');
   console.error('[Flutterwave] FLW_PUBLIC_KEY:', FLW_PUBLIC_KEY ? '✅ Set' : '❌ Missing');
   console.error('[Flutterwave] FLW_SECRET_KEY:', FLW_SECRET_KEY ? '✅ Set' : '❌ Missing');
-  throw new Error('Flutterwave environment variables are not configured. Please set FLW_PUBLIC_KEY and FLW_SECRET_KEY in your .env file.');
+  console.error('[Flutterwave] FLW_ENCRYPTION_KEY:', FLW_ENCRYPTION_KEY ? '✅ Set' : '❌ Missing');
+  throw new Error('Flutterwave environment variables are not configured. Please set FLW_PUBLIC_KEY, FLW_SECRET_KEY, and FLW_ENCRYPTION_KEY in your .env file.');
 }
 
 console.log('[Flutterwave] ✅ Environment variables loaded successfully');
 console.log('[Flutterwave] Public Key:', FLW_PUBLIC_KEY.substring(0, 10) + '...');
 console.log('[Flutterwave] Secret Key:', FLW_SECRET_KEY.substring(0, 10) + '...');
+console.log('[Flutterwave] Encryption Key:', FLW_ENCRYPTION_KEY.substring(0, 10) + '...');
 
-const flw = new Flutterwave(FLW_PUBLIC_KEY, FLW_SECRET_KEY);
+// V4 API Base URL
 const FLW_API_BASE = 'https://api.flutterwave.com/v3';
 
 export interface FlutterwavePaymentPayload {
   tx_ref: string;
   amount: number;
   currency: string;
-  payment_type?: "card" | "mobilemoney" | "ussd";
+  payment_options?: string;
   redirect_url?: string;
   customer: {
     email: string;
     phonenumber?: string;
     name: string;
   };
+  customizations?: {
+    title?: string;
+    description?: string;
+    logo?: string;
+  };
   meta?: Record<string, any>;
 }
 
 export const initializePayment = async (payload: FlutterwavePaymentPayload) => {
   try {
-    console.log('[Flutterwave] 🚀 Initializing payment...');
-    console.log('[Flutterwave] Payload:', {
+    console.log('[Flutterwave v4] 🚀 Initializing payment...');
+    console.log('[Flutterwave v4] Payload:', {
       tx_ref: payload.tx_ref,
       amount: payload.amount,
       currency: payload.currency,
       customer_email: payload.customer.email,
       customer_name: payload.customer.name,
-      payment_type: payload.payment_type,
+      payment_options: payload.payment_options,
       redirect_url: payload.redirect_url
     });
 
@@ -54,26 +61,24 @@ export const initializePayment = async (payload: FlutterwavePaymentPayload) => {
       throw new Error('Invalid amount: must be greater than 0');
     }
 
-    // Derive payment options
-    // For Rwanda MoMo, the option key is "mobilemoneyrw"; card remains "card".
-    const wantsMoMo = payload.payment_type === 'mobilemoney' || !!payload.customer.phonenumber;
-    const payment_options = wantsMoMo ? 'mobilemoneyrw' : 'card';
+    // Determine payment options for v4
+    const payment_options = payload.payment_options || 'card,mobilemoneyrwanda';
 
     const requestPayload = {
       tx_ref: payload.tx_ref,
       amount: payload.amount,
       currency: payload.currency,
       redirect_url: payload.redirect_url,
+      payment_options,
       customer: payload.customer,
       meta: payload.meta || {},
-      payment_options,
-      customizations: {
+      customizations: payload.customizations || {
         title: 'Ndarehe Booking Payment',
         description: 'Secure checkout powered by Flutterwave',
       },
     };
 
-    // Call Flutterwave REST API directly (hosted pay)
+    // Call Flutterwave V4 REST API
     const { data } = await axios.post(
       `${FLW_API_BASE}/payments`,
       requestPayload,
@@ -86,47 +91,78 @@ export const initializePayment = async (payload: FlutterwavePaymentPayload) => {
       }
     );
 
-    console.log('[Flutterwave] Initialize response:', JSON.stringify(data, null, 2));
+    console.log('[Flutterwave v4] Initialize response:', JSON.stringify(data, null, 2));
 
-    const link = data?.data?.link || data?.link;
-    if (link) {
-      console.log(`[Flutterwave] ✅ Payment link generated successfully: ${link}`);
-      console.log(`[Flutterwave] Transaction reference: ${payload.tx_ref}`);
+    if (data.status === 'success' && data.data?.link) {
+      console.log(`[Flutterwave v4] ✅ Payment link generated successfully: ${data.data.link}`);
+      console.log(`[Flutterwave v4] Transaction reference: ${payload.tx_ref}`);
+      return data;
     } else {
-      console.error('[Flutterwave] ❌ No payment link found in response:', data);
-      throw new Error('Failed to generate payment link from Flutterwave response');
+      console.error('[Flutterwave v4] ❌ Payment initialization failed:', data.message);
+      throw new Error(data.message || 'Failed to initialize payment');
     }
-
-    return data;
   } catch (error) {
-    console.error("[Flutterwave] ❌ Initialize payment error:", error);
+    console.error("[Flutterwave v4] ❌ Initialize payment error:", error);
 
-    if (error instanceof Error) {
-      console.error("[Flutterwave] Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
+    if (axios.isAxiosError(error)) {
+      console.error('[Flutterwave v4] Axios error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
       });
-    } else {
-      console.error("[Flutterwave] Error details (non-Error type):", error);
-    }
-
-    // If axios error, log response data for clarity
-    // @ts-ignore
-    if (error?.response) {
-      // @ts-ignore
-      console.error('[Flutterwave] Axios response error:', error.response.status, error.response.data);
+      
+      if (error.response?.data) {
+        throw new Error(error.response.data.message || 'Payment initialization failed');
+      }
     }
 
     throw error;
   }
 };
 
-export const verifyPayment = async (tx_ref: string) => {
+export const verifyPayment = async (transactionId: string) => {
   try {
-    console.log(`[Flutterwave] Verifying payment for tx_ref: ${tx_ref}`);
+    console.log(`[Flutterwave v4] Verifying payment for transaction: ${transactionId}`);
 
-    // Verify by reference via REST API
+    // Verify by transaction ID (v4 uses transaction ID instead of tx_ref for verification)
+    const { data } = await axios.get(
+      `${FLW_API_BASE}/transactions/${transactionId}/verify`,
+      {
+        headers: {
+          Authorization: `Bearer ${FLW_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 15000
+      }
+    );
+
+    console.log('[Flutterwave v4] Verification response:', JSON.stringify(data, null, 2));
+
+    if (data.status === 'success') {
+      return data;
+    } else {
+      throw new Error(data.message || 'Verification failed');
+    }
+  } catch (error) {
+    console.error("[Flutterwave v4] ❌ Verify payment error:", error);
+    
+    if (axios.isAxiosError(error)) {
+      console.error('[Flutterwave v4] Axios verification error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+    }
+    
+    throw error;
+  }
+};
+
+// New v4 function to verify by transaction reference
+export const verifyPaymentByReference = async (tx_ref: string) => {
+  try {
+    console.log(`[Flutterwave v4] Verifying payment by reference: ${tx_ref}`);
+
     const { data } = await axios.get(
       `${FLW_API_BASE}/transactions/verify_by_reference`,
       {
@@ -139,16 +175,24 @@ export const verifyPayment = async (tx_ref: string) => {
       }
     );
 
-    console.log('[Flutterwave] Verification response:', JSON.stringify(data, null, 2));
+    console.log('[Flutterwave v4] Verification by reference response:', JSON.stringify(data, null, 2));
 
-    return data;
-  } catch (error) {
-    console.error("[Flutterwave] ❌ Verify payment error:", error);
-    // @ts-ignore
-    if (error?.response) {
-      // @ts-ignore
-      console.error('[Flutterwave] Axios response error (verify):', error.response.status, error.response.data);
+    if (data.status === 'success') {
+      return data;
+    } else {
+      throw new Error(data.message || 'Verification failed');
     }
+  } catch (error) {
+    console.error("[Flutterwave v4] ❌ Verify payment by reference error:", error);
+    
+    if (axios.isAxiosError(error)) {
+      console.error('[Flutterwave v4] Axios verification error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+    }
+    
     throw error;
   }
 };

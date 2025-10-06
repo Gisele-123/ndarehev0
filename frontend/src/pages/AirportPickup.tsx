@@ -117,70 +117,69 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
   };
 
   const handleBooking = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedCar) return;
+  e.preventDefault();
+  if (!selectedCar) return;
 
+  if (user && !user.isVerified) {
+    setShowVerificationReminder(true);
+    return;
+  }
 
-    if (user && !user.isVerified) {
-      setShowVerificationReminder(true);
-      return;
-    }
+  try {
+    const response = await bookingsApi.create({
+      serviceType: "TRANSPORTATION",
+      serviceId: selectedCar.id,
+      startDate: booking.date + "T" + booking.time,
+      endDate: booking.date + "T" + booking.time,
+      numberOfPeople: booking.passengers,
+      specialRequests: `Airport Pickup - Flight: ${booking.flightNumber}, Airline: ${booking.airline}, Destination: ${booking.destination}`
+    });
 
-    try {
+    if (response.success) {
+      const baseAmount = selectedCar.pricePerTrip;
+      const flutterwaveFee = baseAmount * 0.05; 
+      const amount = baseAmount + flutterwaveFee;
 
-      const response = await bookingsApi.create({
-        serviceType: "TRANSPORTATION",
-        serviceId: selectedCar.id,
-        startDate: booking.date + "T" + booking.time,
-        endDate: booking.date + "T" + booking.time,
-        numberOfPeople: booking.passengers,
-        specialRequests: `Airport Pickup - Flight: ${booking.flightNumber}, Airline: ${booking.airline}, Destination: ${booking.destination}`
+      setIsPaying(true);
+
+      const customer = {
+        email: user?.email || 'guest@example.com',
+        name: `${user?.firstName || 'Guest'} ${user?.lastName || ''}`.trim(),
+      } as { email: string; name: string };
+
+      const initRes = await flutterwaveApi.init({
+        bookingId: (response as any).data.booking.id,
+        amount,
+        currency: selectedCar.currency || 'RWF',
+        customer,
       });
 
-      if (response.success) {
-        const baseAmount = selectedCar.pricePerTrip;
-        const fluttwaveFee = baseAmount * 0.05; 
-        const amount = baseAmount + fluttwaveFee;
-
-        setIsPaying(true);
-
-        const customer = {
-          email: user?.email || 'guest@example.com',
-          name: `${user?.firstName || 'Guest'} ${user?.lastName || ''}`.trim(),
-        } as { email: string; name: string };
-
-        const initRes = await flutterwaveApi.init({
-          bookingId: (response as any).data.booking.id,
-          amount,
-          currency: selectedCar.currency || 'RWF',
-          customer,
-        });
-
-        if (initRes.success && initRes.link) {
-          setPaymentLink(initRes.link);
-          if (initRes.tx_ref) setTxRef(initRes.tx_ref);
-          window.location.href = initRes.link;
-        } else {
-          throw new Error(initRes.message || 'Failed to initiate payment');
-        }
+      // FIXED: Use the correct response structure
+      if (initRes.success && initRes.link) {
+        setPaymentLink(initRes.link);
+        if (initRes.tx_ref) setTxRef(initRes.tx_ref);
+        window.location.href = initRes.link;
       } else {
-        throw new Error("Booking failed");
+        throw new Error(initRes.message || 'Failed to initiate payment');
       }
-    } catch (error: any) {
-      console.error("Booking error:", error);
-      if (error.message && error.message.includes("verify your email")) {
-        setShowVerificationReminder(true);
-      } else {
-        toast({
-          title: "Booking Failed",
-          description: error.message || "There was an error processing your booking. Please try again.",
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setIsPaying(false);
+    } else {
+      throw new Error("Booking failed");
     }
-  };
+  } catch (error: any) {
+    console.error("Booking error:", error);
+    if (error.message && error.message.includes("verify your email")) {
+      setShowVerificationReminder(true);
+    } else {
+      toast({
+        title: "Booking Failed",
+        description: error.message || "There was an error processing your booking. Please try again.",
+        variant: "destructive"
+      });
+    }
+  } finally {
+    setIsPaying(false);
+  }
+};
 
   const verifyPayment = async () => {
     if (!txRef) {
