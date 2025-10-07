@@ -21,7 +21,7 @@ if (!looksLikeSecretKey || FLW_SECRET_KEY.length < 20) {
   throw new Error('Invalid FLW_SECRET_KEY format. Use the exact Secret Key from Flutterwave dashboard (Test or Live).');
 }
 
-console.log('[Flutterwave] ✅ Environment variables loaded successfully');
+console.log('[Flutterwave] ✅ Environment variables loaded successfully ');
 console.log('[Flutterwave] Public Key:', FLW_PUBLIC_KEY.substring(0, 10) + '...');
 console.log('[Flutterwave] Secret Key:', FLW_SECRET_KEY.substring(0, 10) + '...');
 console.log('[Flutterwave] Encryption Key:', FLW_ENCRYPTION_KEY.substring(0, 10) + '...');
