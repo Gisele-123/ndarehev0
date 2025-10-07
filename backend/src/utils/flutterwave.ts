@@ -13,13 +13,13 @@ if (!FLW_PUBLIC_KEY || !FLW_SECRET_KEY || !FLW_ENCRYPTION_KEY) {
   throw new Error('Flutterwave environment variables are not configured. Please set FLW_PUBLIC_KEY, FLW_SECRET_KEY, and FLW_ENCRYPTION_KEY in your .env file.');
 }
 
-// Basic sanity check to catch wrong secret keys early
-const looksLikeSecretKey = /^(FLWSECK|FLWSECK_TEST)-/i.test(FLW_SECRET_KEY);
-if (!looksLikeSecretKey || FLW_SECRET_KEY.length < 20) {
-  console.error('[Flutterwave] ❌ FLW_SECRET_KEY does not appear to be a valid Flutterwave secret key.');
-  console.error('[Flutterwave] Received value (first 6 chars):', FLW_SECRET_KEY.substring(0, 6) + '...');
-  throw new Error('Invalid FLW_SECRET_KEY format. Use the exact Secret Key from Flutterwave dashboard (Test or Live).');
-}
+// // Basic sanity check to catch wrong secret keys early
+// const looksLikeSecretKey = /^(FLWSECK|FLWSECK_TEST)-/i.test(FLW_SECRET_KEY);
+// if (!looksLikeSecretKey || FLW_SECRET_KEY.length < 20) {
+//   console.error('[Flutterwave] ❌ FLW_SECRET_KEY does not appear to be a valid Flutterwave secret key.');
+//   console.error('[Flutterwave] Received value (first 6 chars):', FLW_SECRET_KEY.substring(0, 6) + '...');
+//   throw new Error('Invalid FLW_SECRET_KEY format. Use the exact Secret Key from Flutterwave dashboard (Test or Live).');
+// }
 
 console.log('[Flutterwave] ✅ Environment variables loaded successfully ');
 console.log('[Flutterwave] Public Key:', FLW_PUBLIC_KEY.substring(0, 10) + '...');
