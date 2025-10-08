@@ -13,7 +13,7 @@ interface WhatsAppSupportProps {
 }
 
 const WhatsAppSupport = ({ 
-  phoneNumber = "+250 788 123 456", 
+  phoneNumber = "+250 791753659", 
   businessHours = "24/7" 
 }: WhatsAppSupportProps) => {
   const [isOpen, setIsOpen] = useState(false);
