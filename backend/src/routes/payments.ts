@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { initializePayment, verifyPayment } from "@/utils/flutterwave";
+import { initializePayment, verifyPayment, verifyPaymentByReference } from "@/utils/flutterwave";
 import { prisma } from "../config/database";
 import { sendEmail, emailTemplates } from "../utils/email";
 
@@ -84,14 +84,28 @@ router.post("/flutterwave", async (req, res) => {
 
 
 router.get("/flutterwave/verify", async (req, res) => {
-  const { tx_ref, status } = req.query as { tx_ref?: string; status?: string };
+  const { transaction_id, tx_ref, status } = req.query as { 
+    transaction_id?: string; 
+    tx_ref?: string; 
+    status?: string 
+  };
 
-  if (!tx_ref) return res.status(400).send("tx_ref is required");
+  console.log("[Payment Verify] Flutterwave callback:", { transaction_id, tx_ref, status });
 
   try {
-    const fwRes = await verifyPayment(String(tx_ref));
-    const paymentStatus = fwRes?.data?.status;
-    const bookingId = fwRes?.data?.meta?.bookingId;
+
+    let verificationData;
+
+     if (transaction_id) {
+      verificationData = await verifyPayment(transaction_id);
+    } else if (tx_ref) {
+      verificationData = await verifyPaymentByReference(tx_ref);
+    } else {
+      return res.status(400).send("Missing transaction_id or tx_ref");
+    }
+
+    const paymentStatus = verificationData?.data?.status;
+    const bookingId = verificationData?.data?.meta?.bookingId;
 
     if (paymentStatus === "successful" && bookingId) {
       await prisma.payment.update({
