@@ -15,7 +15,7 @@ const Explore = () => {
 
   const services = [
     {
-      id: 1,
+      id: "accommodations",
       title: "Accommodations",
       description: "Find the perfect place to stay in Rwanda",
       icon: Hotel,
@@ -86,14 +86,8 @@ const Explore = () => {
                       if (item.id === "overview") {
                         setActiveTab(item.id);
                       } else {
-                        // Check if user is authenticated
-                        if (user) {
-                          // Direct navigation to service pages
-                          navigate(services.find(s => s.id === item.id)?.href || "/");
-                        } else {
-                          // Redirect to login page with redirect parameter
-                          navigate(`/login?redirect=${encodeURIComponent(services.find(s => s.id === item.id)?.href || "/")}`);
-                        }
+                        // Direct navigation to service pages - no login required
+                        navigate(services.find(s => s.id === item.id)?.href || "/");
                       }
                     }}
                                          className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group ${

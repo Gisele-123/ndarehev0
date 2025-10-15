@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import EmailVerificationReminder from "@/components/EmailVerificationReminder";
+import LoginModal from "@/components/LoginModal";
 import { transportationApi, bookingsApi, flutterwaveApi } from "@/lib/api";
 
 interface Transportation {
@@ -60,6 +61,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
   const [vehicles, setVehicles] = useState<Transportation[]>([]);
   const [isPaying, setIsPaying] = useState(false);
   const [showVerificationReminder, setShowVerificationReminder] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Added for payment flow
   const [paymentVerified, setPaymentVerified] = useState(false);
@@ -98,6 +100,11 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
   };
 
   const openModal = (car: Transportation) => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setSelectedCar(car);
     setBooking({
       flightNumber: "",
@@ -225,7 +232,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
         <div className="mb-8">
           {showLayout && (
             <div className="flex items-center gap-4 mb-6">
-              <Button variant="ghost" size="sm" asChild className="hover:bg-green-50 hover:text-green-700 transition-all duration-300">
+              <Button variant="ghost" size="sm" asChild className="hover:bg-green-50 hover:text-green-700 transition-all duration-300 ml-72">
                 <Link to="/explore">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Explore
@@ -568,6 +575,13 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
         <EmailVerificationReminder
           isOpen={showVerificationReminder}
           onClose={() => setShowVerificationReminder(false)}
+        />
+
+        {/* Login Modal */}
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onSuccess={() => setShowLoginModal(false)}
         />
       </div>
 

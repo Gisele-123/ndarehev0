@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { bookingsApi, accommodationsApi, paymentsApi, flutterwaveApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import EmailVerificationReminder from "@/components/EmailVerificationReminder";
+import LoginModal from "@/components/LoginModal";
 
 interface Accommodation {
   id: string;
@@ -180,6 +181,7 @@ const AccommodationDetails = () => {
     specialRequests: ""
   });
   const [showVerificationReminder, setShowVerificationReminder] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -339,6 +341,15 @@ const AccommodationDetails = () => {
       hasKitchen: false,
       specialNotes: "Contact for specific room details and amenities."
     };
+  };
+
+  // Handle Book Now button click with authentication check
+  const handleBookNow = () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    setModalOpen(true);
   };
 
   // In your AccommodationDetails component
@@ -736,7 +747,7 @@ const handleFlutterwavePayment = async () => {
                 <div className="text-muted-foreground">per person per night</div>
               </div>
 
-              <Button className="w-full" size="lg" onClick={() => setModalOpen(true)}>
+              <Button className="w-full" size="lg" onClick={handleBookNow}>
                 Book Now
               </Button>
             </CardContent>
@@ -1102,6 +1113,12 @@ const handleFlutterwavePayment = async () => {
       <EmailVerificationReminder
         isOpen={showVerificationReminder}
         onClose={() => setShowVerificationReminder(false)}
+      />
+
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={() => setShowLoginModal(false)}
       />
     </main>
   );

@@ -139,32 +139,12 @@ function App() {
               </RoleBasedRoute>
             } />
 
-            {/* Protected service routes */}
-            <Route path="/accommodations" element={
-              <ProtectedRoute>
-                <Accommodations />
-              </ProtectedRoute>
-            } />
-            <Route path="/accommodation/:id" element={
-              <ProtectedRoute>
-                <AccommodationDetails />
-              </ProtectedRoute>
-            } />
-            <Route path="/transportation" element={
-              <ProtectedRoute>
-                <Transportation />
-              </ProtectedRoute>
-            } />
-            <Route path="/tours" element={
-              <ProtectedRoute>
-                <Tours />
-              </ProtectedRoute>
-            } />
-            <Route path="/tour/:id" element={
-              <ProtectedRoute>
-                <TourDetails />
-              </ProtectedRoute>
-            } />
+            {/* Public service routes */}
+            <Route path="/accommodations" element={<Accommodations />} />
+            <Route path="/accommodation/:id" element={<AccommodationDetails />} />
+            <Route path="/transportation" element={<Transportation />} />
+            <Route path="/tours" element={<Tours />} />
+            <Route path="/tour/:id" element={<TourDetails />} />
             <Route path="/my-bookings" element={
               <ProtectedRoute>
                 <MyBookings />

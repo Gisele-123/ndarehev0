@@ -10,6 +10,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { toursApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import LoginModal from "@/components/LoginModal";
 
 interface Tour {
   id: string;
@@ -51,7 +53,9 @@ const Tours = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
 
   // Fetch tours from API
