@@ -9,6 +9,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import LoginModal from "@/components/LoginModal";
 
 // Type definitions
 interface Experience {
@@ -49,7 +51,9 @@ const LocalExperiences = () => {
     specialRequests: ""
   });
   const [confirmed, setConfirmed] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [experiencesLoading, setExperiencesLoading] = useState(true);
@@ -93,6 +97,11 @@ const LocalExperiences = () => {
   });
 
   const openModal = (experience: Experience) => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setSelectedExperience(experience);
     setBookingDetails({
       date: "",
@@ -377,6 +386,12 @@ const LocalExperiences = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={() => setShowLoginModal(false)}
+      />
 
       <Footer />
     </div>

@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import EmailVerificationReminder from "@/components/EmailVerificationReminder";
+import LoginModal from "@/components/LoginModal";
 import { transportationApi, bookingsApi, flutterwaveApi } from "@/lib/api";
 
 interface Transportation {
@@ -63,6 +64,7 @@ const Transportation = () => {
     serviceType: "trip" // kept for compatibility; pricing will be days-based
   });
   const [showVerificationReminder, setShowVerificationReminder] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -118,6 +120,11 @@ const Transportation = () => {
   const vehicleTypes = ["STANDARD", "VIP", "VAN", "BUS", "MOTORCYCLE"];
 
   const openBookingModal = (service: Transportation) => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setSelectedService(service);
     setBooking({
       startDate: "",
@@ -634,6 +641,13 @@ const handleBooking = async (e: React.FormEvent) => {
       <EmailVerificationReminder
         isOpen={showVerificationReminder}
         onClose={() => setShowVerificationReminder(false)}
+      />
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={() => setShowLoginModal(false)}
       />
     </main>
   );
