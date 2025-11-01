@@ -10,7 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { bookingsApi, accommodationsApi, paymentsApi, flutterwaveApi } from "@/lib/api";
+import { bookingsApi, accommodationsApi, paymentsApi, pesapalApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import EmailVerificationReminder from "@/components/EmailVerificationReminder";
 import LoginModal from "@/components/LoginModal";
@@ -353,8 +353,8 @@ const AccommodationDetails = () => {
   };
 
   // In your AccommodationDetails component
-const handleFlutterwavePayment = async () => {
-  console.log('🟢 handleFlutterwavePayment called!');
+const handlePesapalPayment = async () => {
+  console.log('🟢 handlePesapalPayment called!');
   console.log('🟢 accommodation:', accommodation);
   console.log('🟢 booking:', booking);
   console.log('🟢 paymentProvider:', paymentProvider);
@@ -408,15 +408,15 @@ const handleFlutterwavePayment = async () => {
     const guests = parseInt(booking.guests) || 1;
     const amount = nights * guests * (accommodation.pricePerNight || 0);
 
-    // 3) Prepare customer (Flutterwave Checkout)
+    // 3) Prepare customer (Pesapal Payment)
     const customer = {
       email: user?.email || 'guest@example.com',
       name: `${user?.firstName || 'Guest'} ${user?.lastName || ''}`.trim(),
       phonenumber: momo.phone || undefined,
     } as { email: string; name: string; phonenumber?: string };
 
-    // 4) Initialize Flutterwave session via backend
-    const initRes = await flutterwaveApi.init({
+    // 4) Initialize Pesapal session via backend
+    const initRes = await pesapalApi.init({
       bookingId: newBooking.id,
       amount,
       currency: accommodation.currency || 'RWF',
@@ -429,9 +429,9 @@ const handleFlutterwavePayment = async () => {
       setPaymentLink(initRes.link);
       if (initRes.tx_ref) setTxRef(initRes.tx_ref);
       
-      console.log('[Flutterwave] Checkout link:', initRes.link, 'tx_ref:', initRes.tx_ref);
+      console.log('[Pesapal] Checkout link:', initRes.link, 'tx_ref:', initRes.tx_ref);
       
-      // Open Flutterwave payment page in same tab
+      // Open Pesapal payment page in same tab
       window.location.href = initRes.link;
       
       toast({
@@ -460,7 +460,7 @@ const handleFlutterwavePayment = async () => {
       setIsPaying(true);
       console.log('[Payment] Verifying payment for tx_ref:', txRef);
       
-      const data = await flutterwaveApi.verifyJson(txRef);
+      const data = await pesapalApi.verifyJson(txRef);
 
       if (data.success && data.paid) {
         setPaymentVerified(true);
@@ -982,7 +982,7 @@ const handleFlutterwavePayment = async () => {
                               <br />
                               Base: {accommodation.currency} {baseTotal.toLocaleString()}
                               <br />
-                              Flutterwave fee (5%): {accommodation.currency} {flutterwaveFee.toLocaleString()}
+                              Pesapal fee (5%): {accommodation.currency} {flutterwaveFee.toLocaleString()}
                             </>
                           )}
                         </p>
@@ -1011,7 +1011,7 @@ const handleFlutterwavePayment = async () => {
                     className="w-full" 
                     onClick={() => {
                       console.log('🔴 Button clicked!');
-                      handleFlutterwavePayment();
+                      handlePesapalPayment();
                     }} 
                     disabled={isPaying}
                   >
@@ -1021,7 +1021,7 @@ const handleFlutterwavePayment = async () => {
                         Processing...
                       </div>
                     ) : (
-                      `Pay with ${paymentProvider === 'MOMO' ? 'MTN/Airtel' : 'Card'} Flutterwavw`
+                      `Pay with ${paymentProvider === 'MOMO' ? 'MTN/Airtel' : 'Card'} Pesapal`
                     )}
                   </Button>
                   

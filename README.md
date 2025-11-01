@@ -414,8 +414,6 @@ npm run dev
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
 
 ### Integrations
-[![Stripe](https://img.shields.io/badge/Stripe-008CDD?style=for-the-badge&logo=stripe&logoColor=white)](https://stripe.com)
-[![Flutterwave](https://img.shields.io/badge/Flutterwave-F5A623?style=for-the-badge&logo=flutterwave&logoColor=white)](https://flutterwave.com)
 [![Twilio](https://img.shields.io/badge/Twilio-F22F46?style=for-the-badge&logo=twilio&logoColor=white)](https://twilio.com)
 
 </div>
