@@ -402,8 +402,8 @@ export const paymentsApi = {
   },
 };
 
-// Flutterwave Checkout wrappers - Using LOCAL backend for payments
-export const flutterwaveApi = {
+// Pesapal Payment wrappers - Using LOCAL backend for payments
+export const pesapalApi = {
   init: async (payload: { 
     bookingId: string; 
     amount: number; 
@@ -415,15 +415,12 @@ export const flutterwaveApi = {
     }; 
     payment_type?: string 
   }) => {
-    console.log('[Flutterwave API] 🚀 Starting payment initialization');
-    console.log('[Flutterwave API] Using backend URL:', LOCAL_PAYMENT_API_URL);
-    
-    // Convert payment_type to v4 payment_options
-    const payment_options = payload.payment_type === 'mobilemoney' ? 'mobilemoneyrwanda' : 'card';
+    console.log('[Pesapal API] 🚀 Starting payment initialization');
+    console.log('[Pesapal API] Using backend URL:', LOCAL_PAYMENT_API_URL);
     
     const requestPayload = {
       ...payload,
-      payment_options
+      payment_type: payload.payment_type || 'card'
     };
 
     const response = await localPaymentApiRequest<{ 
@@ -433,28 +430,28 @@ export const flutterwaveApi = {
       data?: any;
       message?: string 
     }>(
-      '/payments/flutterwave',
+      '/payments/pesapal',
       {
         method: 'POST',
         body: JSON.stringify(requestPayload),
       }
     );
     
-    console.log('[Flutterwave API] ✅ Init response from backend:', response);
+    console.log('[Pesapal API] ✅ Init response from backend:', response);
     return response;
   },
   
   verifyJson: async (tx_ref: string) => {
-    console.log('[Flutterwave API v4] 🔍 Verifying payment for tx_ref:', tx_ref);
+    console.log('[Pesapal API] 🔍 Verifying payment for tx_ref:', tx_ref);
     const response = await localPaymentApiRequest<{ 
       success: boolean; 
       paid: boolean; 
       bookingId?: string | null; 
       message?: string 
     }>(
-      `/payments/flutterwave/verify-json?tx_ref=${encodeURIComponent(tx_ref)}`
+      `/payments/pesapal/verify-json?tx_ref=${encodeURIComponent(tx_ref)}`
     );
-    console.log('[Flutterwave API v4] ✅ Verify response:', response);
+    console.log('[Pesapal API] ✅ Verify response:', response);
     return response;
   },
 };

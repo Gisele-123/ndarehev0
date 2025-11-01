@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { initializePayment, verifyPayment, verifyPaymentByReference } from "@/utils/flutterwave";
+import { initializePesapalPayment, verifyPesapalPayment, verifyPesapalPaymentByReference } from "@/utils/pesapal";
 import { prisma } from "../config/database";
 import { sendEmail, emailTemplates } from "../utils/email";
 
 const router = Router();
 
 
-router.post("/flutterwave", async (req, res) => {
+router.post("/pesapal", async (req, res) => {
   const { bookingId, amount, currency, customer, payment_type } = req.body;
 
   if (!bookingId || !amount || !currency || !customer) {
@@ -26,7 +26,7 @@ router.post("/flutterwave", async (req, res) => {
     }
 
     const baseUrl = process.env.BACKEND_URL || "http://localhost:5000";
-    const redirect_url = `${baseUrl}/api/payments/flutterwave/verify`;
+    const redirect_url = `${baseUrl}/api/payments/pesapal/callback`;
 
     const payload = {
       tx_ref,
@@ -42,13 +42,13 @@ router.post("/flutterwave", async (req, res) => {
       meta: { bookingId },
     };
 
+    const pesapalRes = await initializePesapalPayment(payload);
 
-    const fwRes = await initializePayment(payload);
-
-    if (!fwRes?.status || !fwRes?.link) {
+    if (!pesapalRes?.success || !pesapalRes?.data?.redirect_url) {
       return res.status(500).json({
         success: false,
-        message: "Failed to create Flutterwave payment link",
+        message: "Failed to create Pesapal payment link",
+        error: pesapalRes?.error || "Unknown error",
       });
     }
 
@@ -57,23 +57,27 @@ router.post("/flutterwave", async (req, res) => {
         booking: { connect: { id: bookingId } },
         user: { connect: { id: booking.user.id } },
         method: payment_type === "mobilemoney" ? "MOBILE_MONEY" : "CARD",
-        transactionId: fwRes.reference,
+        transactionId: pesapalRes.data.merchant_reference,
         amount,
         currency,
         status: "PENDING",
         gatewayResponse: {
-          set: { provider: "flutterwave", tx_ref: fwRes.reference },
+          set: { 
+            provider: "pesapal", 
+            tx_ref: pesapalRes.data.merchant_reference, 
+            order_tracking_id: pesapalRes.data.order_tracking_id 
+          },
         },
       },
     });
 
     return res.json({
       success: true,
-      link: fwRes.link,
-      tx_ref: fwRes.reference,
+      link: pesapalRes.data.redirect_url,
+      tx_ref: pesapalRes.data.merchant_reference,
     });
   } catch (error: any) {
-    console.error("Flutterwave create session error:", error);
+    console.error("Pesapal create session error:", error);
     return res.status(500).json({
       success: false,
       message: "Payment initialization failed",
@@ -83,33 +87,31 @@ router.post("/flutterwave", async (req, res) => {
 });
 
 
-router.get("/flutterwave/verify", async (req, res) => {
-  const { transaction_id, tx_ref, status } = req.query as { 
-    transaction_id?: string; 
-    tx_ref?: string; 
-    status?: string 
+router.get("/pesapal/callback", async (req, res) => {
+  const { pesapal_merchant_reference, pesapal_transaction_tracking_id } = req.query as { 
+    pesapal_merchant_reference?: string; 
+    pesapal_transaction_tracking_id?: string; 
   };
 
-  console.log("[Payment Verify] Flutterwave callback:", { transaction_id, tx_ref, status });
+  console.log("[Payment Verify] Pesapal callback:", { pesapal_merchant_reference, pesapal_transaction_tracking_id });
 
   try {
-
     let verificationData;
 
-     if (transaction_id) {
-      verificationData = await verifyPayment(transaction_id);
-    } else if (tx_ref) {
-      verificationData = await verifyPaymentByReference(tx_ref);
+    if (pesapal_transaction_tracking_id) {
+      verificationData = await verifyPesapalPayment(pesapal_transaction_tracking_id);
+    } else if (pesapal_merchant_reference) {
+      verificationData = await verifyPesapalPaymentByReference(pesapal_merchant_reference);
     } else {
-      return res.status(400).send("Missing transaction_id or tx_ref");
+      return res.status(400).send("Missing pesapal_merchant_reference or pesapal_transaction_tracking_id");
     }
 
-    const paymentStatus = verificationData?.data?.status;
-    const bookingId = verificationData?.data?.meta?.bookingId;
+    const paymentStatus = verificationData?.success ? verificationData.data?.payment_status : null;
+    const bookingId = pesapal_merchant_reference ? pesapal_merchant_reference.split('-')[1] : null;
 
-    if (paymentStatus === "successful" && bookingId) {
+    if (paymentStatus === "COMPLETED" && bookingId) {
       await prisma.payment.update({
-        where: { transactionId: String(tx_ref) },
+        where: { transactionId: String(pesapal_merchant_reference) },
         data: { status: "COMPLETED" },
       });
 
@@ -159,13 +161,13 @@ router.get("/flutterwave/verify", async (req, res) => {
 
     return res.redirect(redirectUrl);
   } catch (error) {
-    console.error("Flutterwave verify error:", error);
+    console.error("Pesapal verify error:", error);
     return res.status(500).send("Verification failed");
   }
 });
 
 
-router.get("/flutterwave/verify-json", async (req, res) => {
+router.get("/pesapal/verify-json", async (req, res) => {
   const { tx_ref } = req.query as { tx_ref?: string };
 
   if (!tx_ref)
@@ -180,11 +182,11 @@ router.get("/flutterwave/verify-json", async (req, res) => {
       return res.json({ success: true, paid: false, message: "No payment yet" });
     }
 
-    const fwRes = await verifyPayment(String(tx_ref));
-    const paymentStatus = fwRes?.data?.status;
-    const bookingId = fwRes?.data?.meta?.bookingId || null;
+    const pesapalRes = await verifyPesapalPaymentByReference(String(tx_ref));
+    const paymentStatus = pesapalRes?.success ? pesapalRes.data?.payment_status : null;
+    const bookingId = tx_ref ? tx_ref.split('-')[1] : null;
 
-    if (paymentStatus === "successful" && bookingId) {
+    if (paymentStatus === "COMPLETED" && bookingId) {
       await prisma.payment.update({
         where: { transactionId: String(tx_ref) },
         data: { status: "COMPLETED" },
@@ -226,7 +228,7 @@ router.get("/flutterwave/verify-json", async (req, res) => {
 
     return res.json({ success: true, paid: false, bookingId });
   } catch (error) {
-    console.error("Flutterwave verify-json error:", error);
+    console.error("Pesapal verify-json error:", error);
     return res.json({ success: true, paid: false, message: "Verification failed" });
   }
 });

@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import EmailVerificationReminder from "@/components/EmailVerificationReminder";
 import LoginModal from "@/components/LoginModal";
-import { transportationApi, bookingsApi, flutterwaveApi } from "@/lib/api";
+import { transportationApi, bookingsApi, pesapalApi } from "@/lib/api";
 
 interface Transportation {
   id: string;
@@ -190,8 +190,8 @@ const handleBooking = async (e: React.FormEvent) => {
         phonenumber: user?.phone || undefined,
       } as { email: string; name: string; phonenumber?: string };
 
-      // Initialize Flutterwave Hosted Pay via backend
-      const initRes = await flutterwaveApi.init({
+      // Initialize Pesapal Payment via backend
+      const initRes = await pesapalApi.init({
         bookingId: (response as any).data.booking.id,
         amount,
         currency: selectedService.currency || 'RWF',
@@ -235,7 +235,7 @@ const handleBooking = async (e: React.FormEvent) => {
     }
     try {
       setIsPaying(true);
-      const data = await flutterwaveApi.verifyJson(txRef);
+      const data = await pesapalApi.verifyJson(txRef);
       if (data.success && data.paid) {
         setPaymentVerified(true);
         toast({ title: 'Payment Verified', description: 'Your payment has been confirmed. You can now proceed.', variant: 'default' });
@@ -543,7 +543,7 @@ const handleBooking = async (e: React.FormEvent) => {
                         Processing...
                       </div>
                     ) : (
-                      'Pay with Flutterwave'
+                      'Pay with Pesapal'
                     )}
                   </Button>
                   {txRef && (

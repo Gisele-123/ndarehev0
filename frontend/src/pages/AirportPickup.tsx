@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import EmailVerificationReminder from "@/components/EmailVerificationReminder";
 import LoginModal from "@/components/LoginModal";
-import { transportationApi, bookingsApi, flutterwaveApi } from "@/lib/api";
+import { transportationApi, bookingsApi, pesapalApi } from "@/lib/api";
 
 interface Transportation {
   id: string;
@@ -154,7 +154,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
         name: `${user?.firstName || 'Guest'} ${user?.lastName || ''}`.trim(),
       } as { email: string; name: string };
 
-      const initRes = await flutterwaveApi.init({
+      const initRes = await pesapalApi.init({
         bookingId: (response as any).data.booking.id,
         amount,
         currency: selectedCar.currency || 'RWF',
@@ -195,7 +195,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
     }
     try {
       setIsPaying(true);
-      const data = await flutterwaveApi.verifyJson(txRef);
+      const data = await pesapalApi.verifyJson(txRef);
       if (data.success && data.paid) {
         setPaymentVerified(true);
         toast({ title: 'Payment Verified', description: 'Your payment has been confirmed. You can now proceed.', variant: 'default' });
@@ -451,7 +451,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
                       <p className="text-sm text-muted-foreground">
                         Base: {selectedCar.currency} {selectedCar.pricePerTrip.toLocaleString()}
                         <br />
-                        Flutterwave fee (5%): {selectedCar.currency} {(selectedCar.pricePerTrip * 0.05).toLocaleString()}
+                        Pesapal fee (5%): {selectedCar.currency} {(selectedCar.pricePerTrip * 0.05).toLocaleString()}
                         <br />
                         Includes all taxes and fees
                       </p>
@@ -476,7 +476,7 @@ const AirportPickup = ({ showLayout = true }: { showLayout?: boolean }) => {
                           Processing...
                         </div>
                       ) : (
-                        'Pay with Flutterwave'
+                        'Pay with Pesapal'
                       )}
                     </Button>
                     {txRef && (
